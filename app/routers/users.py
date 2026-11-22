@@ -72,3 +72,28 @@ def read_user_likes(
     )
 
     return db.exec(stmt).all()
+
+# ═══════════════ Seguir / dejar de seguir ═══════════════
+@router.put("/{user_id}/follow", response_model=UserProfile)
+def follow_user(user_id: int, db: SessionDep, current_user: CurrentUser):
+    # TODO 3: seguir a un usuario (idempotente, igual que el like).
+    #   a) target = get_user_or_404(db, user_id)
+    #   b) si target.id == current_user.id → 400 (status.HTTP_400_BAD_REQUEST) "No puedes seguirte a ti mismo"
+    #   c) si db.get(Follow, (current_user.id, user_id)) es None:
+    #          db.add(Follow(follower_id=current_user.id, followed_id=user_id)); db.commit()
+    #      (el orden de la tupla es el de las primary_key: follower, followed)
+    #   d) return to_profile(db, target)
+
+    target = get_user_or_404(db, user_id)
+
+    if target.id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No puedes seguirte a ti mismo",
+        )
+
+    if db.get(Follow, (current_user.id, user_id)) is None:
+        db.add(Follow(follower_id=current_user.id, followed_id=user_id))
+        db.commit()
+
+    return to_profile(db, target)
