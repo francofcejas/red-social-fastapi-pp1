@@ -50,6 +50,10 @@ class UserPublic(UserBase):  # SALE: vista pública
 class UserMe(UserPublic):  # SALE: vista privada, solo para el propio usuario
     role: Role
 
+class UserProfile(UserPublic):
+    followers_count: int
+    following_count: int
+
 
 class Token(SQLModel):
     access_token: str
@@ -105,6 +109,7 @@ class Like(SQLModel, table=True):
    user_id: int = Field(foreign_key="users.id", primary_key=True, ondelete="CASCADE")
    post_id: int = Field(foreign_key="posts.id", primary_key=True, ondelete="CASCADE")
    created_at: datetime = Field(default_factory=utcnow)
+
 
 # ═══════════════ Follows ═══════════════
 # TODO 1: crea la tabla de ENLACE  class Follow(SQLModel, table=True)  (users ↔ users, consigo misma)
