@@ -145,3 +145,24 @@ def read_followers(
     )
 
     return db.exec(stmt).all()
+
+@router.get("/{user_id}/following", response_model=list[UserPublic])
+def read_following(
+    user_id: int, db: SessionDep, offset: int = 0, limit: Annotated[int, Query(le=100)] = 20
+):
+    # TODO 6 (DESAFÍO, sin código): es el espejo del TODO 5, con las columnas INVERTIDAS.
+    #   Dibuja en el pizarrón dos filas de la tabla follows y decide cuál columna va en el join
+    #   y cuál en el where. Este es el error que más se comete en esta clase.
+
+    get_user_or_404(db, user_id)
+
+    stmt = (
+        select(User)
+        .join(Follow, col(Follow.followed_id) == col(User.id))
+        .where(Follow.follower_id == user_id)
+        .order_by(col(Follow.created_at).desc())
+        .offset(offset)
+        .limit(limit)
+    )
+
+    return db.exec(stmt).all()
