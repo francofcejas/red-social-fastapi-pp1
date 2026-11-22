@@ -112,3 +112,36 @@ def unfollow_user(user_id: int, db: SessionDep, current_user: CurrentUser):
         db.commit()
 
     return to_profile(db, target)
+
+# ═══════════════ Listas: followers vs following ═══════════════
+# Follow tiene DOS claves foráneas hacia users, así que el JOIN necesita la condición explícita.
+# Prueba  select(User).join(Follow)  sin condición y lee el error: ¿qué te está pidiendo SQLAlchemy?
+#   followers de X = usuarios que lo SIGUEN   → los follower_id de las filas donde followed_id == X
+#   following de X = usuarios a los que SIGUE → los followed_id de las filas donde follower_id == X
+@router.get("/{user_id}/followers", response_model=list[UserPublic])
+def read_followers(
+    user_id: int, db: SessionDep, offset: int = 0, limit: Annotated[int, Query(le=100)] = 20
+):
+    # TODO 5: quiénes siguen a user_id.
+    #   get_user_or_404(db, user_id)
+    #   stmt = (
+    #       select(User)
+    #       .join(Follow, col(Follow.follower_id) == col(User.id))
+    #       .where(Follow.followed_id == user_id)
+    #       .order_by(col(Follow.created_at).desc())
+    #       .offset(offset).limit(limit)
+    #   )
+    #   return db.exec(stmt).all()
+
+    get_user_or_404(db, user_id)
+
+    stmt = (
+        select(User)
+        .join(Follow, col(Follow.follower_id) == col(User.id))
+        .where(Follow.followed_id == user_id)
+        .order_by(col(Follow.created_at).desc())
+        .offset(offset)
+        .limit(limit)
+    )
+
+    return db.exec(stmt).all()
