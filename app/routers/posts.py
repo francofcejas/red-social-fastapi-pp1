@@ -20,13 +20,18 @@ def read_post(post_id: int, db: SessionDep):
     return get_post_or_404(db, post_id)
 
 
-@router.post("", response_model=PostPublic, status_code=201)
-def create_post(data: PostCreate, db: SessionDep, current_user: CurrentUser):
-    # TODO 5: el autor sale del TOKEN, no del cuerpo.
+# TODO 5: el autor sale del TOKEN, no del cuerpo.
     #   (Primero quita author_id de PostCreate en models.py.)
     #   post = Post(**data.model_dump(), author_id=current_user.id)
     #   → db.add → db.commit → db.refresh → return post
-    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "TODO 5: crear post")
+
+@router.post("", response_model=PostPublic, status_code=201)
+def create_post(data: PostCreate, db: SessionDep, current_user: CurrentUser):
+    post = Post(**data.model_dump(), author_id=current_user.id)
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    return post
 
 
 @router.patch("/{post_id}", response_model=PostPublic)
