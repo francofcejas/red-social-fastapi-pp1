@@ -97,3 +97,18 @@ def follow_user(user_id: int, db: SessionDep, current_user: CurrentUser):
         db.commit()
 
     return to_profile(db, target)
+
+@router.delete("/{user_id}/follow", response_model=UserProfile)
+def unfollow_user(user_id: int, db: SessionDep, current_user: CurrentUser):
+    # TODO 4: dejar de seguir. Misma idea al revés, y también idempotente.
+    #   a) target = get_user_or_404   b) follow = db.get(Follow, (current_user.id, user_id))
+    #   c) si follow existe: db.delete(follow) y db.commit()   d) return to_profile(db, target)
+
+    target = get_user_or_404(db, user_id)
+    follow = db.get(Follow, (current_user.id, user_id))
+
+    if follow is not None:
+        db.delete(follow)
+        db.commit()
+
+    return to_profile(db, target)
