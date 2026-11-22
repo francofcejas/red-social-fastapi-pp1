@@ -5,6 +5,7 @@ from typing import Annotated
 
 from pydantic import StringConstraints
 from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy import CheckConstraint
 
 
 def utcnow() -> datetime:
@@ -132,3 +133,8 @@ class Follow(SQLModel, table=True):
     follower_id: int = Field(foreign_key="users.id", primary_key=True, ondelete="CASCADE")
     followed_id: int = Field(foreign_key="users.id", primary_key=True, ondelete="CASCADE")
     created_at: datetime = Field(default_factory=utcnow)
+
+    __table_args__ = (
+        CheckConstraint("follower_id != followed_id", name="no_self_follow"),
+    )
+    
