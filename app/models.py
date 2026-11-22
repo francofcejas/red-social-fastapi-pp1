@@ -86,3 +86,22 @@ class PostPublic(PostBase):
     id: int
     author_id: int
     created_at: datetime
+
+class PostWithLikes(PostPublic):  # SALE: el post + cuántos likes tiene (se calcula, no se guarda)
+    likes_count: int
+    
+# ═══════════════ Likes ═══════════════
+# TODO 1: crea la tabla de ENLACE  class Like(SQLModel, table=True)  (muchos-a-muchos users ↔ posts)
+#   __tablename__ = "likes"
+#   user_id: int = Field(foreign_key="users.id", primary_key=True, ondelete="CASCADE")
+#   post_id: int = Field(foreign_key="posts.id", primary_key=True, ondelete="CASCADE")
+#   created_at: datetime = Field(default_factory=utcnow)
+#
+#   Dos campos con primary_key=True = clave primaria COMPUESTA (user_id, post_id).
+#   Pregunta: ¿qué impide la base de datos con esta clave? ¿Y con ondelete="CASCADE"?
+#   (Borra clase3.db y reinicia después de agregar la tabla.)
+class Like(SQLModel, table=True):
+   __tablename__ = "likes"
+   user_id: int = Field(foreign_key="users.id", primary_key=True, ondelete="CASCADE")
+   post_id: int = Field(foreign_key="posts.id", primary_key=True, ondelete="CASCADE")
+   created_at: datetime = Field(default_factory=utcnow)
