@@ -28,14 +28,33 @@ def register(data: UserCreate, db: SessionDep):
             detail="El usuario ya existe"
         )
 
-@router.post("/login", response_model=Token)
-def login(form: Annotated[OAuth2PasswordRequestForm, Depends()], db: SessionDep):
-    # TODO 3: iniciar sesión (el formulario trae form.username y form.password)
+    user = User(
+        username=data.username,
+        hashed_password=hash_password(data.password)
+    )
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return user
+
+   
+ # TODO 3: iniciar sesión (el formulario trae form.username y form.password)
     #   a) busca el User por username
     #   b) si no existe, o verify_password(form.password, user.hashed_password) es False
     #      → raise credentials_error()      (mismo error para ambos casos: ¿por qué?)
     #   c) return Token(access_token=create_access_token(user.id))
-    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "TODO 3: login")
+
+@router.post("/login", response_model=Token)
+def login(form: Annotated[OAuth2PasswordRequestForm, Depends()], db: SessionDep):
+     
+    user = db.exec(select(User).where(User.username == form.username)).first()
+
+    if not user or not verify_password(form.password, user.hashed_password):
+        raise credentials_error()
+
+    return Token(access_token=create_access_token(user.id))
 
 
 @router.get("/me", response_model=UserMe)
