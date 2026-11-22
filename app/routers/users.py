@@ -1,18 +1,48 @@
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
-from sqlmodel import col, select
+from sqlalchemy import func
+from sqlmodel import Session, col, select
 
-from dependencies import SessionDep, get_user_or_404
-from models import Post, PostPublic, UserPublic, Like
+from dependencies import CurrentUser, SessionDep, get_user_or_404
+from models import Follow, Like, Post, PostPublic, User, UserProfile, UserPublic
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/{user_id}", response_model=UserPublic)
-def read_user(user_id: int, db: SessionDep):
-    return get_user_or_404(db, user_id)
+# ═══════════════ Perfil con contadores ═══════════════
+# TODO 2: GET /users/{id} hoy devuelve UserPublic. Queremos UserProfile (followers_count y following_count).
+#   Escribe esta función auxiliar:
+#
+#   def to_profile(db: Session, user: User) -> UserProfile:
+#       followers = db.exec(
+#           select(func.count()).select_from(Follow).where(Follow.followed_id == user.id)
+#       ).one()
+#       following = db.exec(
+#           select(func.count()).select_from(Follow).where(Follow.follower_id == user.id)
+#       ).one()
+#       return UserProfile.model_validate(
+#           user, update={"followers_count": followers, "following_count": following}
+#       )
+#
+#   Y úsala en read_user (cambia también el response_model a UserProfile).
+#   Pregunta: los dos conteos son casi idénticos. ¿Qué columna cambia y por qué?
 
+def to_profile(db: Session, user: User) -> UserProfile:
+    followers = db.exec(
+        select(func.count()).select_from(Follow).where(Follow.followed_id == user.id)
+    ).one()
+    following = db.exec(
+        select(func.count()).select_from(Follow).where(Follow.follower_id == user.id)
+    ).one()
+    return UserProfile.model_validate(
+        user, update={"followers_count": followers, "following_count": following}
+    )
+
+
+@router.get("/{user_id}", response_model=UserProfile)
+def read_user(user_id: int, db: SessionDep):
+    return to_profile(db, get_user_or_404(db, user_id))
 
 @router.get("/{user_id}/posts", response_model=list[PostPublic])
 def read_user_posts(user_id: int, db: SessionDep):
