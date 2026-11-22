@@ -114,4 +114,23 @@ def delete_post(post_id: int, db: SessionDep, current_user: CurrentUser):
     db.delete(post)
     db.commit()
     
-   
+   # ═══════════════ Likes ═══════════════
+@router.put("/{post_id}/like", response_model=PostWithLikes)
+def like_post(post_id: int, db: SessionDep, current_user: CurrentUser):
+    # TODO 3: dar like. PUT = "déjalo en este estado": hacerlo dos veces NO es un error (idempotente).
+    #   a) get_post_or_404(db, post_id)
+    #   b) like = db.get(Like, (current_user.id, post_id))
+    #      → get con clave COMPUESTA: la tupla va en el orden de las primary_key del modelo
+    #   c) si like es None: db.add(Like(user_id=current_user.id, post_id=post_id)) y db.commit()
+    #      (si ya existía, no hagas nada)
+    #   d) return get_post_with_likes_or_404(db, post_id)     → el cliente ve el conteo nuevo
+
+    get_post_or_404(db, post_id)
+
+    like = db.get(Like, (current_user.id, post_id))
+
+    if like is None:
+        db.add(Like(user_id=current_user.id, post_id=post_id))
+        db.commit()
+
+    return get_post_with_likes_or_404(db, post_id)
